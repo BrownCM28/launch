@@ -432,22 +432,56 @@
   tick();
   const timer = setInterval(tick, 1000);
 
-  function handleSubmit() {
-    const input = document.getElementById('email-input');
-    const val = input.value.trim();
+  const SUPABASE_URL = 'https://rwavklgemfbiffjrkroi.supabase.co'
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YXZrbGdlbWZiaWZmanJrcm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4Mzg4ODYsImV4cCI6MjA5ODQxNDg4Nn0.XHrgiWw4l3GIjtZsvZkT4gs8_6g95C_nEIqWXcPMMT8'
+
+  async function handleSubmit() {
+    const input = document.getElementById('email-input')
+    const val = input.value.trim()
+
     if (!val || !val.includes('@')) {
-      input.style.borderColor = '#ef4444';
-      input.focus();
-      setTimeout(() => input.style.borderColor = '', 1500);
-      return;
+      input.style.borderColor = '#ef4444'
+      input.focus()
+      setTimeout(() => input.style.borderColor = '', 1500)
+      return
     }
-    document.getElementById('form-row').style.display = 'none';
-    document.getElementById('success-msg').style.display = 'block';
+
+    const btn = document.querySelector('#form-row button')
+    btn.textContent = 'Saving...'
+    btn.disabled = true
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/newsletter_subscribers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          email: val.toLowerCase(),
+          source: 'launch_page'
+        })
+      })
+
+      if (res.status === 201 || res.status === 409) {
+        document.getElementById('form-row').style.display = 'none'
+        document.getElementById('success-msg').style.display = 'block'
+      } else {
+        throw new Error('Failed')
+      }
+    } catch (e) {
+      btn.textContent = 'Notify me'
+      btn.disabled = false
+      input.style.borderColor = '#ef4444'
+      setTimeout(() => input.style.borderColor = '', 1500)
+    }
   }
 
   document.getElementById('email-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleSubmit();
-  });
+    if (e.key === 'Enter') handleSubmit()
+  })
 </script>
 </body>
 </html>
